@@ -1,0 +1,53 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String         @id @default(cuid())
+  studentId     String         @unique
+  password      String
+  name          String
+  kakaoId       String
+  isAdmin       Boolean        @default(false)
+  createdAt     DateTime       @default(now())
+  items         Item[]
+  matchRequests MatchRequest[]
+}
+
+model Item {
+  id            String         @id @default(cuid())
+  type          String
+  title         String
+  category      String
+  location      String
+  eventDate     DateTime
+  eventTimeNote String?
+  description   String
+  photos        String         @default("[]")
+  contactTime   String?
+  status        String         @default("RECEIVED")
+  adminNote     String?
+  completedAt   DateTime?
+  authorId      String
+  author        User           @relation(fields: [authorId], references: [id])
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  matchRequests MatchRequest[]
+}
+
+model MatchRequest {
+  id        String   @id @default(cuid())
+  itemId    String
+  item      Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  message   String?
+  createdAt DateTime @default(now())
+
+  @@unique([itemId, userId])
+}
