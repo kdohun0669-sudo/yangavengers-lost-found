@@ -14,7 +14,7 @@ if (!url || !token) {
 }
 
 async function main() {
-  const client = createClient({ url, authToken: token });
+  const client = createClient({ url: url!, authToken: token! });
   const sqlPath = path.resolve(
     process.cwd(),
     "prisma/migrations/20260705055600_init/migration.sql"
