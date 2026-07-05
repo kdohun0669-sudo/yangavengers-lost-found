@@ -2,7 +2,7 @@
 
 교내 분실물을 쉽게 신고하고 찾을 수 있는 MVP 웹사이트입니다.
 
-## 실행 방법
+## 로컬 실행
 
 ```bash
 npm install
@@ -19,6 +19,42 @@ npm run dev
 | 학생회 관리자 | `10101` | `admin1234` |
 | 일반 학생 (데모) | `10215` | `test1234` |
 
+## Vercel + Turso 배포
+
+### 1. Turso DB 만들기
+
+1. [https://turso.tech](https://turso.tech) → GitHub 로그인
+2. **Create Database** → 이름 예: `yangavengers-lost-found`
+3. Region: **Tokyo (nrt)** 권장
+4. DB 클릭 → **Database URL** 복사 (`libsql://...`)
+5. **Create Token** → Auth Token 복사
+
+### 2. Vercel 환경 변수 설정
+
+Vercel 프로젝트 → **Settings → Environment Variables**:
+
+| Name | Value |
+|------|-------|
+| `TURSO_DATABASE_URL` | `libsql://xxx.turso.io` |
+| `TURSO_AUTH_TOKEN` | Turso 토큰 |
+| `AUTH_SECRET` | 아무 긴 랜덤 문자열 |
+
+### 3. Turso에 테이블 + 시드 데이터 넣기
+
+로컬 `.env`에 Turso 값을 추가한 뒤:
+
+```bash
+npm run db:seed:turso
+```
+
+### 4. GitHub push → Vercel 자동 재배포
+
+```bash
+git add .
+git commit -m "Add Turso database support"
+git push
+```
+
 ## 주요 기능
 
 - 학번(5자리) + 비밀번호 가입/로그인
@@ -32,18 +68,8 @@ npm run dev
 
 - Next.js 15 (App Router)
 - Tailwind CSS 4
-- Prisma + SQLite
+- Prisma + SQLite (로컬) / Turso (배포)
 - JWT 세션 쿠키
-
-## 프로젝트 구조
-
-```
-src/app/          페이지 및 API
-src/components/   UI 컴포넌트
-src/lib/          인증, DB, 유틸
-prisma/           DB 스키마 및 시드
-PRD.md            기획 문서
-```
 
 ## 학번 형식
 

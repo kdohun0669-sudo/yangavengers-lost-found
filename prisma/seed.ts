@@ -1,5 +1,9 @@
+import dotenv from "dotenv";
+import path from "path";
 import bcrypt from "bcryptjs";
 import { prisma } from "../src/lib/prisma";
+
+dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 async function main() {
   const adminPassword = await bcrypt.hash("admin1234", 10);
