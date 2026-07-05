@@ -68,7 +68,8 @@ export async function POST(request: NextRequest) {
     await createSession(toPublicUser(user));
 
     return NextResponse.json({ user: toPublicUser(user) });
-  } catch {
+  } catch (error) {
+    console.error("Signup error:", error);
     return NextResponse.json(
       { error: "가입 처리 중 오류가 발생했습니다." },
       { status: 500 }

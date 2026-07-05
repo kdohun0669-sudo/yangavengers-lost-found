@@ -29,7 +29,13 @@ async function main() {
   console.log("Turso DB에 스키마 적용 중...");
 
   for (const statement of statements) {
-    await client.execute(statement);
+    try {
+      await client.execute(statement);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes("already exists")) continue;
+      throw error;
+    }
   }
 
   console.log("완료!");
