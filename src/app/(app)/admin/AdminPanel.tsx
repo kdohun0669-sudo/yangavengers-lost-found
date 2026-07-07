@@ -3,7 +3,14 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import ItemCard, { type ItemListItem } from "@/components/ItemCard";
-import { STATUSES, type ItemStatus } from "@/lib/constants";
+import {
+  CATEGORIES,
+  ITEM_TYPES,
+  STATUSES,
+  type Category,
+  type ItemStatus,
+  type ItemType,
+} from "@/lib/constants";
 
 type AdminItem = ItemListItem & {
   author?: { studentId: string; name: string; kakaoId: string };
@@ -51,6 +58,34 @@ export default function AdminPanel() {
   const filtered = items.filter((item) =>
     current.statuses.includes(item.status as ItemStatus)
   );
+  const visibleItems = items.filter((item) => item.status !== "HIDDEN");
+  const resolvedItems = items.filter((item) => item.status === "COMPLETED");
+
+  const statusStats = Object.keys(STATUSES).map((status) => ({
+    status,
+    count: items.filter((item) => item.status === status).length,
+  }));
+
+  const typeStats = Object.keys(ITEM_TYPES).map((type) => ({
+    type,
+    count: items.filter((item) => item.type === type).length,
+  }));
+
+  const categoryStats = Object.keys(CATEGORIES).map((category) => ({
+    category,
+    count: items.filter((item) => item.category === category).length,
+  }));
+
+  const today = new Date();
+  const recent7DaysCount = items.filter((item) => {
+    const created = new Date(item.eventDate);
+    return today.getTime() - created.getTime() <= 7 * 24 * 60 * 60 * 1000;
+  }).length;
+
+  const completionRate =
+    visibleItems.length === 0
+      ? 0
+      : Math.round((resolvedItems.length / visibleItems.length) * 100);
 
   async function updateStatus(id: string, status: string) {
     const res = await fetch(`/api/items/${id}`, {
@@ -67,6 +102,58 @@ export default function AdminPanel() {
       <p className="mb-4 text-sm text-slate-600">
         등록 확인 · 카카오톡 연락 · 상태 변경
       </p>
+
+      <section className="mb-6 space-y-3">
+        <h2 className="text-sm font-semibold text-slate-700">분실물 통계</h2>
+        <div className="grid grid-cols-2 gap-3">
+          <StatCard label="전체 등록" value={`${items.length}건`} />
+          <StatCard label="해결 완료" value={`${resolvedItems.length}건`} />
+          <StatCard label="최근 7일 등록" value={`${recent7DaysCount}건`} />
+          <StatCard label="해결률" value={`${completionRate}%`} />
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-3 text-sm font-semibold text-slate-800">유형별</h3>
+          <div className="space-y-2">
+            {typeStats.map((row) => (
+              <StatRow
+                key={row.type}
+                label={ITEM_TYPES[row.type as ItemType].label}
+                count={row.count}
+                total={items.length}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-3 text-sm font-semibold text-slate-800">상태별</h3>
+          <div className="space-y-2">
+            {statusStats.map((row) => (
+              <StatRow
+                key={row.status}
+                label={STATUSES[row.status as ItemStatus].label}
+                count={row.count}
+                total={items.length}
+              />
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <h3 className="mb-3 text-sm font-semibold text-slate-800">분류별</h3>
+          <div className="space-y-2">
+            {categoryStats.map((row) => (
+              <StatRow
+                key={row.category}
+                label={CATEGORIES[row.category as Category].label}
+                count={row.count}
+                total={items.length}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
 
       <div className="mb-4 flex gap-2 overflow-x-auto">
         {TABS.map((t) => (
@@ -145,5 +232,42 @@ export default function AdminPanel() {
         </div>
       )}
     </main>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+      <p className="text-xs text-slate-500">{label}</p>
+      <p className="mt-1 text-xl font-bold text-slate-900">{value}</p>
+    </div>
+  );
+}
+
+function StatRow({
+  label,
+  count,
+  total,
+}: {
+  label: string;
+  count: number;
+  total: number;
+}) {
+  const percent = total === 0 ? 0 : Math.round((count / total) * 100);
+  return (
+    <div>
+      <div className="mb-1 flex items-center justify-between text-sm">
+        <span className="text-slate-700">{label}</span>
+        <span className="font-medium text-slate-900">
+          {count}건 ({percent}%)
+        </span>
+      </div>
+      <div className="h-2 rounded-full bg-slate-100">
+        <div
+          className="h-2 rounded-full bg-blue-500"
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
   );
 }
